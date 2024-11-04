@@ -1,21 +1,42 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, ValidationPipe } from '@nestjs/common';
 import { UserService } from './user.service';
+import { RegisterDto } from './register.dto';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() registerDto: { email: string; password: string }) {
-    const user = await this.userService.register(registerDto.email, registerDto.password);
-    return { message: `User registered successfully with email ${user.email}` };
+  async register(@Body(new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    validationError: { target: false, value: false },
+  })) registerDto: RegisterDto) {
+    try {
+      const user = await this.userService.register(registerDto);
+      return { message: `User registered successfully with email ${user.email}` };
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'Registration failed',
+          errors: [{ field: error.name, message: error.message }]
+        };
+      }
+    }
   }
 
   @Get('all')
   @HttpCode(HttpStatus.OK)
   async getAllUsers() {
     const users = await this.userService.findAll();
-    return users.map(user => ({ email: user.email, createdAt: user.createdAt }));
+    return users.map(user => ({
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      createdAt: user.createdAt
+    }));
   }
 }
