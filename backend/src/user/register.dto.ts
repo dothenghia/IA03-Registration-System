@@ -13,8 +13,8 @@ export class RegisterDto {
   password: string;
 
   @IsOptional()
-  @Matches(/^(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/, {
-    message: 'Invalid phone number format'
+  @Matches(/^0\d{9}$/, {
+    message: 'Invalid phone number format (10 digits, starting with 0)',
   })
   phone?: string;
 }
