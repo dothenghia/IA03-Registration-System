@@ -1,18 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUsers } from '../services';
-
-interface User {
-  username: string;
-  email: string;
-  phone?: string;
-  createdAt: string;
-}
+import { User } from '../services/type';
 
 const HomePage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const navigate = useNavigate();
 
+  // Check if user is logged in
   useEffect(() => {
     const checkAuth = () => {
       const user = localStorage.getItem('user');
@@ -35,6 +30,7 @@ const HomePage = () => {
     fetchUsers();
   }, [navigate]);
 
+  // Logout user
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
@@ -46,12 +42,13 @@ const HomePage = () => {
         <h1 className="text-2xl font-bold">Registered Users</h1>
         <button
           onClick={handleLogout}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full"
         >
           Logout
         </button>
       </div>
-      <div className="overflow-x-auto">
+
+      <div className="overflow-x-auto rounded-2xl">
         <table className="min-w-full bg-white">
           <thead className="bg-blue-500 text-white">
             <tr>
@@ -73,6 +70,7 @@ const HomePage = () => {
           </tbody>
         </table>
       </div>
+      
     </div>
   );
 };

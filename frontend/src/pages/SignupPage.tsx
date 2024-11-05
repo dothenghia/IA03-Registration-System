@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../services';
-
-interface ErrorMessage {
-  field: string;
-  message: string;
-}
+import axios from 'axios';
+import { ErrorMessage } from '../services/type';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
@@ -15,20 +12,30 @@ const SignupPage = () => {
   const [errors, setErrors] = useState<ErrorMessage[]>([]);
   const navigate = useNavigate();
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await register({ username, email, password, phone });
+      const userData = { username, email, password };
+      if (phone) {
+        Object.assign(userData, { phone });
+      }
+      await register(userData);
       navigate('/login');
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
-        setErrors(err.response.data.message);
+      if (axios.isAxiosError(err) && err.response) {
+        if (err.response.data && Array.isArray(err.response.data.message)) {
+          setErrors(err.response.data.message);
+        } else {
+          setErrors([{ field: 'general', message: 'An error occurred during registration' }]);
+        }
       } else {
-        setErrors([{ field: 'general', message: 'An error occurred during registration' }]);
+        setErrors([{ field: 'general', message: 'An unexpected error occurred' }]);
       }
     }
   };
 
+  // Get errormessage for field
   const getErrorForField = (fieldName: string) => {
     return errors.find(error => error.field === fieldName)?.message;
   };
@@ -37,11 +44,11 @@ const SignupPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Create your account</h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Register account</h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div className="mb-4">
+        <form className="mt-8" onSubmit={handleSubmit}>
+          <div className="space-y-4 mb-6">
+            <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 Username <span className="text-red-500">*</span>
               </label>
@@ -50,9 +57,10 @@ const SignupPage = () => {
                 name="username"
                 type="text"
                 required
-                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
-                  getErrorForField('username') ? 'border-red-500' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border 
+                  ${getErrorForField('username') ? 'border-red-500' : 'border-gray-300'}
+                  placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 
+                  focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -61,7 +69,8 @@ const SignupPage = () => {
                 <p className="mt-2 text-sm text-red-600">{getErrorForField('username')}</p>
               )}
             </div>
-            <div className="mb-4">
+
+            <div>
               <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-2">
                 Email address <span className="text-red-500">*</span>
               </label>
@@ -71,9 +80,10 @@ const SignupPage = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
-                  getErrorForField('email') ? 'border-red-500' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border 
+                  ${getErrorForField('email') ? 'border-red-500' : 'border-gray-300'}
+                  placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 
+                  focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -82,7 +92,8 @@ const SignupPage = () => {
                 <p className="mt-2 text-sm text-red-600">{getErrorForField('email')}</p>
               )}
             </div>
-            <div className="mb-4">
+
+            <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password <span className="text-red-500">*</span>
               </label>
@@ -92,9 +103,10 @@ const SignupPage = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
-                  getErrorForField('password') ? 'border-red-500' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border 
+                  ${getErrorForField('password') ? 'border-red-500' : 'border-gray-300'}
+                  placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 
+                  focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -103,7 +115,8 @@ const SignupPage = () => {
                 <p className="mt-2 text-sm text-red-600">{getErrorForField('password')}</p>
               )}
             </div>
-            <div className="mb-4">
+
+            <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                 Phone (optional)
               </label>
@@ -112,9 +125,10 @@ const SignupPage = () => {
                 name="phone"
                 type="tel"
                 autoComplete="tel"
-                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
-                  getErrorForField('phone') ? 'border-red-500' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border 
+                  ${getErrorForField('phone') ? 'border-red-500' : 'border-gray-300'}
+                  placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 
+                  focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -132,15 +146,19 @@ const SignupPage = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent 
+                text-sm font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Sign up
+              Submit
             </button>
           </div>
+
         </form>
+        
         <div className="text-center">
           <Link to="/login" className="font-medium text-blue-500 hover:text-blue-600">
-            Already have an account? Sign in
+            Already have an account? Log in
           </Link>
         </div>
       </div>
