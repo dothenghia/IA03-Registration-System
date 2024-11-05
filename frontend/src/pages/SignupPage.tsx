@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../services';
 
+interface ErrorMessage {
+  field: string;
+  message: string;
+}
+
 const SignupPage = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<ErrorMessage[]>([]);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -16,12 +21,16 @@ const SignupPage = () => {
       await register({ username, email, password, phone });
       navigate('/login');
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.errors) {
-        setError(err.response.data.errors.map(error => error.message).join(', '));
+      if (err.response && err.response.data && err.response.data.message) {
+        setErrors(err.response.data.message);
       } else {
-        setError('An error occurred during registration');
+        setErrors([{ field: 'general', message: 'An error occurred during registration' }]);
       }
     }
+  };
+
+  const getErrorForField = (fieldName: string) => {
+    return errors.find(error => error.field === fieldName)?.message;
   };
 
   return (
@@ -33,62 +42,92 @@ const SignupPage = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div className="mb-4">
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                Username <span className="text-red-500">*</span>
+              </label>
               <input
                 id="username"
                 name="username"
                 type="text"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
+                  getErrorForField('username') ? 'border-red-500' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
+              {getErrorForField('username') && (
+                <p className="mt-2 text-sm text-red-600">{getErrorForField('username')}</p>
+              )}
             </div>
             <div className="mb-4">
-              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-2">Email address</label>
+              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-2">
+                Email address <span className="text-red-500">*</span>
+              </label>
               <input
                 id="email-address"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
+                  getErrorForField('email') ? 'border-red-500' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              {getErrorForField('email') && (
+                <p className="mt-2 text-sm text-red-600">{getErrorForField('email')}</p>
+              )}
             </div>
             <div className="mb-4">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password <span className="text-red-500">*</span>
+              </label>
               <input
                 id="password"
                 name="password"
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
+                  getErrorForField('password') ? 'border-red-500' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              {getErrorForField('password') && (
+                <p className="mt-2 text-sm text-red-600">{getErrorForField('password')}</p>
+              )}
             </div>
             <div className="mb-4">
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">Phone (optional)</label>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                Phone (optional)
+              </label>
               <input
                 id="phone"
                 name="phone"
                 type="tel"
                 autoComplete="tel"
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
+                  getErrorForField('phone') ? 'border-red-500' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
+              {getErrorForField('phone') && (
+                <p className="mt-2 text-sm text-red-600">{getErrorForField('phone')}</p>
+              )}
             </div>
           </div>
 
-          {error && <p className="mt-2 text-center text-sm text-red-600">{error}</p>}
+          {getErrorForField('general') && (
+            <p className="mt-2 text-center text-sm text-red-600">{getErrorForField('general')}</p>
+          )}
 
           <div>
             <button

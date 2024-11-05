@@ -2,10 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../services';
 
+interface ErrorMessage {
+  field: string;
+  message: string;
+}
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<ErrorMessage[]>([]);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -15,8 +20,16 @@ const LoginPage = () => {
       localStorage.setItem('user', JSON.stringify(response.user));
       navigate('/home');
     } catch (err) {
-      setError('Invalid email or password');
+      if (err.response && err.response.data && err.response.data.message) {
+        setErrors(err.response.data.message);
+      } else {
+        setErrors([{ field: 'general', message: 'An error occurred during login' }]);
+      }
     }
+  };
+
+  const getErrorForField = (fieldName: string) => {
+    return errors.find(error => error.field === fieldName)?.message;
   };
 
   return (
@@ -28,36 +41,52 @@ const LoginPage = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div className="mb-4">
-              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-2">Email address</label>
+              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-2">
+                Email address <span className="text-red-500">*</span>
+              </label>
               <input
                 id="email-address"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
+                  getErrorForField('email') ? 'border-red-500' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              {getErrorForField('email') && (
+                <p className="mt-2 text-sm text-red-600">{getErrorForField('email')}</p>
+              )}
             </div>
             <div className="mb-4">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password <span className="text-red-500">*</span>
+              </label>
               <input
                 id="password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
+                  getErrorForField('password') ? 'border-red-500' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              {getErrorForField('password') && (
+                <p className="mt-2 text-sm text-red-600">{getErrorForField('password')}</p>
+              )}
             </div>
           </div>
 
-          {error && <p className="mt-2 text-center text-sm text-red-600">{error}</p>}
+          {getErrorForField('general') && (
+            <p className="mt-2 text-center text-sm text-red-600">{getErrorForField('general')}</p>
+          )}
 
           <div>
             <button
